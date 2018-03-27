@@ -1,8 +1,53 @@
 <html>
 	<head>
-	<title>Sistema de enquetes</title>
+	<title>Cadastrar Enquete</title>
 	</head>
 	<body>
-	<p>Sistema de enquetes</p>
+	
+	<div id="cadastro">
+		<h1>Cadastrar Enquete</h1>
+		
+		<input type="hidden" name="id" id="id">
+		<label>Título: <input type="text" name="titulo" id="titulo" alt="Titulo"></label>
+		
+		<p/>
+		<label>Descrição: <input type="text" name="descricao" id="descricao" alt="Descrição"></label>
+		
+		<div>
+			<h3>Respostas <button>+</button></h3>
+		</div>
+			
+		<table id="respostas"></table>
+		<input type="button" id="btnSalvar" value="Salvar Enquete" onclick="salvarEnquete();">
+	</div>
+		
+	<script
+	  src="https://code.jquery.com/jquery-3.3.1.min.js"
+	  integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+	  crossorigin="anonymous"></script>
+ 
+  	<script type="text/javascript">
+  		function salvarEnquete(){
+
+  			var titulo = $('#titulo').val();
+  			var descricao = $('#descricao').val();
+
+  			$.ajax({
+  			  url:"/enquete",
+  			  type:"POST",
+  			  data:JSON.stringify({"titulo":titulo,"descricao":descricao}),
+  			  contentType:"application/json; charset=utf-8",
+  			  dataType:"json",
+  			  success: function(){
+  				$('#titulo').val('');
+  	  			$('#descricao').val('');
+  	  			$('#titulo').focus();
+  				console.log(data);
+  			  }
+  			});
+ 			
+  	  	  	  	  	
+  		};
+  	</script>
 	</body>
 </html>

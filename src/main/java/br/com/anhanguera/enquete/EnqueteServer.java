@@ -15,12 +15,12 @@ import static akka.http.javadsl.server.Directives.*;
 
 public class EnqueteServer {
 
-    public static Route routes() {
+    public static Route routes(ActorSystem system) {
         return route(
                 path("", () ->
                         getFromResource("web/index.html")
                 ),
-                EnqueteRouter.routes()
+                EnqueteRouter.routes(system)
         );
     }
 
@@ -32,7 +32,7 @@ public class EnqueteServer {
         final ActorMaterializer materializer = ActorMaterializer.create(system);
         final ConnectHttp host = ConnectHttp.toHost("127.0.0.1", 8080);
 
-        Http.get(system).bindAndHandle(routes()
+        Http.get(system).bindAndHandle(routes(system)
                 .flow(system, materializer), host, materializer);
 
         System.out.println("Pressione ENTER para finalizar...");
