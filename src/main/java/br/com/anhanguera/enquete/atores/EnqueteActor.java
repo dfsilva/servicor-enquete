@@ -27,7 +27,7 @@ public class EnqueteActor extends AbstractLoggingActor {
 	private ActorRef responderPara;
 	
 	private ActorRef bancoDadosReplicator = DistributedData.get(context().system()).replicator();
-    private final Key<ORSet<Enquete>> enquetesKey = ORSetKey.create("enquetes_key");
+    private final Key<ORSet<String>> enquetesKey = ORSetKey.create("enquetes_key");
 
     private final Replicator.WriteConsistency estrategiaEscrita = new Replicator.WriteAll(Duration.create(3, TimeUnit.SECONDS));
     private final Replicator.ReadConsistency estrategiaLeitura = new Replicator.ReadAll(Duration.create(3, TimeUnit.SECONDS));
@@ -57,6 +57,7 @@ public class EnqueteActor extends AbstractLoggingActor {
     }
 
     private void recebeuGetSucesso(Replicator.GetSuccess<ORSet<String>> response){
+
         log().info("Valores no banco de dados: {}", response.dataValue().getElements());
 
     }
@@ -68,16 +69,20 @@ public class EnqueteActor extends AbstractLoggingActor {
 		
 		Enquete enquete = envelope.enquete;
 		enquete.setId(new Date().getTime());
+	
+		try {
+			String enqueteStr = new ObjectMapper().writeValueAsString(enquete);
+			Replicator.Update<ORSet<String>> update = new Replicator.Update<ORSet<String>>(
+					enquetesKey,
+	                ORSet.create(),
+	                estrategiaEscrita,
+	                atual -> atual.add(no, enqueteStr)
+	        );
 
-		Replicator.Update<ORSet<Enquete>> update = new Replicator.Update<ORSet<Enquete>>(
-				enquetesKey,
-                ORSet.create(),
-                estrategiaEscrita,
-                atual -> atual.add(no, enquete)
-        );
-
-	    bancoDadosReplicator.tell(update, getSelf());
-		
+		    bancoDadosReplicator.tell(update, getSelf());
+		} catch (JsonProcessingException e) {
+			e.printStackTrace();
+		}
 	}
 	
 	public static class CadastrarEnquete implements Serializable{
