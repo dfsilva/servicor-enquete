@@ -30,7 +30,9 @@ public class EnqueteServer {
         ActorSystem system = ActorSystem.create("enquete-server", config);
 
         final ActorMaterializer materializer = ActorMaterializer.create(system);
-        final ConnectHttp host = ConnectHttp.toHost("127.0.0.1", 8080);
+        int httpPort = Integer.parseInt(System.getenv("HTTP_PORT"));
+        String httpHost = System.getenv("CLUSTER_IP");
+        final ConnectHttp host = ConnectHttp.toHost(httpHost, httpPort);
 
         Http.get(system).bindAndHandle(routes(system)
                 .flow(system, materializer), host, materializer);

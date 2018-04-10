@@ -20,6 +20,11 @@
 		<table id="respostas"></table>
 		<input type="button" id="btnSalvar" value="Salvar Enquete" onclick="salvarEnquete();">
 	</div>
+
+	<div id="listagem">
+		<h1>Enquetes Cadastradas</h1>
+		<table id="tblEnquetes"></table>
+	</div>
 		
 	<script
 	  src="https://code.jquery.com/jquery-3.3.1.min.js"
@@ -27,8 +32,29 @@
 	  crossorigin="anonymous"></script>
  
   	<script type="text/javascript">
-  		function salvarEnquete(){
 
+        function listarEnquetes(){
+            $.get("/enquete", function(data){
+                $("#tblUsuarios").empty();
+                $("#tblUsuarios").append('<tr>'+
+                    '<th>Codigo</td>'+
+                    '<th>Nome</td>'+
+                    '<th>Idade</td>'+
+                    '<th>Acoes</td>'+
+                    '</tr>');
+                data.forEach(function(usuario){
+                    $("#tblUsuarios").append('<tr>'+
+                        '<td id="td_id'+usuario.id+'">'+usuario.id+'</td>'+
+                        '<td id="td_nome'+usuario.id+'">'+usuario.nome+'</td>'+
+                        '<td id="td_idade'+usuario.id+'">'+usuario.idade+'</td>'+
+                        '<td><button onclick="editar('+usuario.id+')">Alterar</button>'
+                        +'<button onclick="excluir('+usuario.id+')">Excluir</button></td>'+
+                        '</tr>');
+                });
+            });
+        };
+
+  		function salvarEnquete(){
   			var titulo = $('#titulo').val();
   			var descricao = $('#descricao').val();
 
@@ -38,15 +64,13 @@
   			  data:JSON.stringify({"titulo":titulo,"descricao":descricao}),
   			  contentType:"application/json; charset=utf-8",
   			  dataType:"json",
-  			  success: function(){
+  			  success: function(data){
   				$('#titulo').val('');
   	  			$('#descricao').val('');
   	  			$('#titulo').focus();
   				console.log(data);
   			  }
   			});
- 			
-  	  	  	  	  	
   		};
   	</script>
 	</body>

@@ -44,4 +44,13 @@ public class Enquete implements Serializable {
 	public void setId(Long id) {
 		this.id = id;
 	}
+
+	@Override
+	public String toString() {
+		return "Enquete{" +
+				"id=" + id +
+				", titulo='" + titulo + '\'' +
+				", descricao='" + descricao + '\'' +
+				'}';
+	}
 }

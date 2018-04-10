@@ -41,16 +41,14 @@ public class EnqueteRouter {
 				
 				post(() -> entity(Jackson.unmarshaller(Enquete.class), enquete -> {
 					ActorRef enqueteActor = system.actorOf(Props.create(EnqueteActor.class));
-					CompletionStage<Enquete> enqueteComp = ask(enqueteActor, new EnqueteActor.CadastrarEnquete(enquete),
+					CompletionStage<List<Enquete>> enqueteComp = ask(enqueteActor, new EnqueteActor.CadastrarEnquete(enquete),
 							new Timeout(Duration.create(5, TimeUnit.SECONDS))).thenApply(r -> {
 								System.out.println("resposta");
 								System.out.println(r);
-								return (Enquete)r;
-							});	
+								return (List<Enquete>)r;
+							});
 					return completeOKWithFuture(enqueteComp, Jackson.marshaller());
 				})),
-				
-				
 
 				path("alternate", () -> put(() -> entity(Jackson.unmarshaller(Enquete.class), enquete -> {
 					ActorRef enqueteActor = system.actorOf(Props.create(EnqueteActor.class));

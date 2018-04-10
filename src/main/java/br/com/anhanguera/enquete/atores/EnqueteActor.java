@@ -1,7 +1,10 @@
 package br.com.anhanguera.enquete.atores;
 
+import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
@@ -37,34 +40,54 @@ public class EnqueteActor extends AbstractLoggingActor {
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(CadastrarEnquete.class, this::cadastrarEnquete)
-				
 				.match(Replicator.GetSuccess.class, this::eUmResponseGetEnquetes,
                         this::recebeuGetSucesso)
                 .match(Replicator.UpdateResponse.class, updateResponse -> {
                     log().info("Atualizacao de uma acao de update");
                     log().info(updateResponse.toString());
-                    //responderPara.tell(updateResponse, getSelf());
-                    
-                    bancoDadosReplicator.tell(new Replicator.Get<>(enquetesKey, estrategiaLeitura, Optional.of(sender())), getSelf());
+					bancoDadosReplicator.tell(new Replicator.Get<>(enquetesKey, estrategiaLeitura, Optional.of(sender())), getSelf());
+
                 })
 				.build();
 	}
-	
-	
+
+
+	@Override
+	public void preStart() throws Exception {
+		super.preStart();
+		log().debug("Pre Starting Actor"+ getSelf().path());
+	}
+
+	@Override
+	public void preRestart(Throwable reason, Optional<Object> message) throws Exception {
+		super.preRestart(reason, message);
+		log().debug("Pre Restarting "+ getSelf().path());
+	}
+
 	private boolean eUmResponseGetEnquetes(Replicator.GetResponse response){
         return response.key().equals(enquetesKey)
                 && (response.getRequest().orElse(null) instanceof ActorRef);
     }
 
     private void recebeuGetSucesso(Replicator.GetSuccess<ORSet<String>> response){
-
         log().info("Valores no banco de dados: {}", response.dataValue().getElements());
+		List<Enquete> retorno = new ArrayList<>();
 
+		ORSet<String> valores = response.dataValue();
+
+		for(String enqueteStr : valores.getElements()){
+			try {
+				retorno.add(new ObjectMapper().readValue(enqueteStr, Enquete.class));
+			} catch (IOException e) {
+				log().error("Erro ao deserializar enquete", e);
+			}
+		}
+
+		responderPara.tell(retorno, getSelf());
     }
 	
 	private void cadastrarEnquete(CadastrarEnquete envelope) {
-		//logica de negocio para cadastrar uma enquete
-		
+		log().info("Cadastrando Enquete: "+ envelope);
 		responderPara = getSender();
 		
 		Enquete enquete = envelope.enquete;
@@ -93,7 +116,13 @@ public class EnqueteActor extends AbstractLoggingActor {
 		public CadastrarEnquete(Enquete enquete){
 			this.enquete = enquete;
 		}
-		
+
+		@Override
+		public String toString() {
+			return "CadastrarEnquete{" +
+					"enquete=" + enquete +
+					'}';
+		}
 	}
 
 }
