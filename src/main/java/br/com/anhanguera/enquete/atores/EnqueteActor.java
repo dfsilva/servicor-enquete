@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import akka.cluster.singleton.ClusterSingletonProxy;
+import akka.cluster.singleton.ClusterSingletonProxySettings;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -29,24 +31,31 @@ public class EnqueteActor extends AbstractLoggingActor {
 	
 	private ActorRef responderPara;
 	
-	private ActorRef bancoDadosReplicator = DistributedData.get(context().system()).replicator();
-    private final Key<ORSet<String>> enquetesKey = ORSetKey.create("enquetes_key");
+//	private ActorRef bancoDadosReplicator = DistributedData.get(context().system()).replicator();
+//    private final Key<ORSet<String>> enquetesKey = ORSetKey.create("enquetes_key");
+//
+//    private final Replicator.WriteConsistency estrategiaEscrita = new Replicator.WriteAll(Duration.create(3, TimeUnit.SECONDS));
+//    private final Replicator.ReadConsistency estrategiaLeitura = new Replicator.ReadAll(Duration.create(3, TimeUnit.SECONDS));
 
-    private final Replicator.WriteConsistency estrategiaEscrita = new Replicator.WriteAll(Duration.create(3, TimeUnit.SECONDS));
-    private final Replicator.ReadConsistency estrategiaLeitura = new Replicator.ReadAll(Duration.create(3, TimeUnit.SECONDS));
+	private ActorRef persistenceSingleton = getContext().actorOf(
+			ClusterSingletonProxy.props(
+					"/user/enquetePersistence",
+					ClusterSingletonProxySettings.create(getContext().system())));
 
 	//Trata todas as mensagens enviadas para este ator
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(CadastrarEnquete.class, this::cadastrarEnquete)
-				.match(Replicator.GetSuccess.class, this::eUmResponseGetEnquetes,
-                        this::recebeuGetSucesso)
-                .match(Replicator.UpdateResponse.class, updateResponse -> {
-                    log().info("Atualizacao de uma acao de update");
-                    log().info(updateResponse.toString());
-					bancoDadosReplicator.tell(new Replicator.Get<>(enquetesKey, estrategiaLeitura, Optional.of(sender())), getSelf());
-
+//				.match(Replicator.GetSuccess.class, this::eUmResponseGetEnquetes,
+//                        this::recebeuGetSucesso)
+//                .match(Replicator.UpdateResponse.class, updateResponse -> {
+//                    log().info("Atualizacao de uma acao de update");
+//                    log().info(updateResponse.toString());
+//					bancoDadosReplicator.tell(new Replicator.Get<>(enquetesKey, estrategiaLeitura, Optional.of(sender())), getSelf());
+//                })
+                .match(SingletonPersistentActor.Inserted.class, (msg)->{
+                    responderPara.tell(new ArrayList<Enquete>(), getSelf());
                 })
 				.build();
 	}
@@ -64,13 +73,13 @@ public class EnqueteActor extends AbstractLoggingActor {
 		log().debug("Pre Restarting "+ getSelf().path());
 	}
 
-	private boolean eUmResponseGetEnquetes(Replicator.GetResponse response){
-        return response.key().equals(enquetesKey)
-                && (response.getRequest().orElse(null) instanceof ActorRef);
-    }
+//	private boolean eUmResponseGetEnquetes(Replicator.GetResponse response){
+//        return response.key().equals(enquetesKey)
+//                && (response.getRequest().orElse(null) instanceof ActorRef);
+//    }
 
     private void recebeuGetSucesso(Replicator.GetSuccess<ORSet<String>> response){
-        log().info("Valores no banco de dados: {}", response.dataValue().getElements());
+        log().debug("Valores no banco de dados: {}", response.dataValue().getElements());
 		List<Enquete> retorno = new ArrayList<>();
 
 		ORSet<String> valores = response.dataValue();
@@ -89,23 +98,27 @@ public class EnqueteActor extends AbstractLoggingActor {
 	private void cadastrarEnquete(CadastrarEnquete envelope) {
 		log().info("Cadastrando Enquete: "+ envelope);
 		responderPara = getSender();
-		
-		Enquete enquete = envelope.enquete;
-		enquete.setId(new Date().getTime());
-	
-		try {
-			String enqueteStr = new ObjectMapper().writeValueAsString(enquete);
-			Replicator.Update<ORSet<String>> update = new Replicator.Update<ORSet<String>>(
-					enquetesKey,
-	                ORSet.create(),
-	                estrategiaEscrita,
-	                atual -> atual.add(no, enqueteStr)
-	        );
 
-		    bancoDadosReplicator.tell(update, getSelf());
-		} catch (JsonProcessingException e) {
-			e.printStackTrace();
-		}
+        Enquete enquete = envelope.enquete;
+		enquete.setId(new Date().getTime());
+		persistenceSingleton.tell(new SingletonPersistentActor.Insert(enquete), getSelf());
+		
+//		Enquete enquete = envelope.enquete;
+//		enquete.setId(new Date().getTime());
+//
+//		try {
+//			String enqueteStr = new ObjectMapper().writeValueAsString(enquete);
+//			Replicator.Update<ORSet<String>> update = new Replicator.Update<ORSet<String>>(
+//					enquetesKey,
+//	                ORSet.create(),
+//	                estrategiaEscrita,
+//	                atual -> atual.add(no, enqueteStr)
+//	        );
+//
+//		    bancoDadosReplicator.tell(update, getSelf());
+//		} catch (JsonProcessingException e) {
+//			e.printStackTrace();
+//		}
 	}
 	
 	public static class CadastrarEnquete implements Serializable{

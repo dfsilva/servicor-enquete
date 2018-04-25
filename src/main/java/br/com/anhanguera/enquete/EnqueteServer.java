@@ -1,13 +1,19 @@
 package br.com.anhanguera.enquete;
 
 import akka.actor.ActorSystem;
+import akka.actor.PoisonPill;
+import akka.cluster.singleton.ClusterSingletonManager;
+import akka.cluster.singleton.ClusterSingletonManagerSettings;
 import akka.http.javadsl.ConnectHttp;
 import akka.http.javadsl.Http;
 import akka.http.javadsl.server.Route;
 import akka.stream.ActorMaterializer;
+import br.com.anhanguera.enquete.atores.SingletonPersistentActor;
 import br.com.anhanguera.enquete.controladores.EnqueteRouter;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import scala.concurrent.duration.Duration;
+import scala.concurrent.duration.FiniteDuration;
 
 import java.io.IOException;
 
@@ -36,6 +42,13 @@ public class EnqueteServer {
 
         Http.get(system).bindAndHandle(routes(system)
                 .flow(system, materializer), host, materializer);
+
+        system.actorOf(
+                ClusterSingletonManager.props(
+                        SingletonPersistentActor.props(),
+                        PoisonPill.getInstance(),
+                        ClusterSingletonManagerSettings.create(system)
+                ),"enquetePersistence");
 
         System.out.println("Pressione ENTER para finalizar...");
         System.in.read();
