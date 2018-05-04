@@ -1,6 +1,7 @@
 package br.com.anhanguera.enquete.dominio;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Enquete implements Serializable {
@@ -10,9 +11,8 @@ public class Enquete implements Serializable {
 	private Long id;
 	private String titulo;
 	private String descricao;
-//	private List<Resposta> respostas;
+	private List<Resposta> respostas = new ArrayList<>();
 
-	
 	public String getTitulo() {
 		return titulo;
 	}
@@ -29,13 +29,13 @@ public class Enquete implements Serializable {
 		this.descricao = descricao;
 	}
 
-//	public List<Resposta> getRespostas() {
-//		return respostas;
-//	}
-//
-//	public void setRespostas(List<Resposta> respostas) {
-//		this.respostas = respostas;
-//	}
+	public List<Resposta> getRespostas() {
+		return respostas;
+	}
+
+	public void setRespostas(List<Resposta> respostas) {
+		this.respostas = respostas;
+	}
 
 	public Long getId() {
 		return id;
@@ -51,6 +51,7 @@ public class Enquete implements Serializable {
 				"id=" + id +
 				", titulo='" + titulo + '\'' +
 				", descricao='" + descricao + '\'' +
+				", respostas=" + respostas +
 				'}';
 	}
 }

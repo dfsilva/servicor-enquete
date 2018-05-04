@@ -1,6 +1,19 @@
 <html>
 	<head>
-	<title>Cadastrar Enquete</title>
+		<meta charset="utf-8">
+		<title>Cadastro de Enquetes :)</title>
+		<meta name="description" content="">
+		<meta name="author" content="">
+
+		<!-- Mobile Specific Metas -->
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<!-- FONT -->
+		<link href="//fonts.googleapis.com/css?family=Raleway:400,300,600" rel="stylesheet" type="text/css">
+
+		<!-- CSS-->
+		<link rel="stylesheet" href="/web/css/normalize.css">
+		<link rel="stylesheet" href="/web/css/skeleton.css">
 	</head>
 	<body>
 	
@@ -35,20 +48,21 @@
 
         function listarEnquetes(){
             $.get("/enquete", function(data){
-                $("#tblUsuarios").empty();
-                $("#tblUsuarios").append('<tr>'+
+                $("#tblEnquetes").empty();
+                $("#tblEnquetes").append('<tr>'+
                     '<th>Codigo</td>'+
-                    '<th>Nome</td>'+
-                    '<th>Idade</td>'+
+                    '<th>Titulo</td>'+
+                    '<th>Descricao</td>'+
                     '<th>Acoes</td>'+
                     '</tr>');
-                data.forEach(function(usuario){
-                    $("#tblUsuarios").append('<tr>'+
-                        '<td id="td_id'+usuario.id+'">'+usuario.id+'</td>'+
-                        '<td id="td_nome'+usuario.id+'">'+usuario.nome+'</td>'+
-                        '<td id="td_idade'+usuario.id+'">'+usuario.idade+'</td>'+
-                        '<td><button onclick="editar('+usuario.id+')">Alterar</button>'
-                        +'<button onclick="excluir('+usuario.id+')">Excluir</button></td>'+
+
+                data.forEach(function(enquete){
+                    $("#tblEnquetes").append('<tr>'+
+                        '<td id="td_id'+enquete.id+'">'+enquete.id+'</td>'+
+                        '<td id="td_titulo'+enquete.id+'">'+enquete.titulo+'</td>'+
+                        '<td id="td_descricao'+enquete.id+'">'+enquete.descricao+'</td>'+
+                        '<td><button onclick="editar('+enquete.id+')">Alterar</button>'
+                        +'<button onclick="excluir('+enquete.id+')">Excluir</button></td>'+
                         '</tr>');
                 });
             });
@@ -72,6 +86,8 @@
   			  }
   			});
   		};
+
+  		listarEnquetes();
   	</script>
 	</body>
 </html>

@@ -30,12 +30,6 @@ public class EnqueteActor extends AbstractLoggingActor {
 	private final Cluster no = Cluster.get(context().system());
 	
 	private ActorRef responderPara;
-	
-//	private ActorRef bancoDadosReplicator = DistributedData.get(context().system()).replicator();
-//    private final Key<ORSet<String>> enquetesKey = ORSetKey.create("enquetes_key");
-//
-//    private final Replicator.WriteConsistency estrategiaEscrita = new Replicator.WriteAll(Duration.create(3, TimeUnit.SECONDS));
-//    private final Replicator.ReadConsistency estrategiaLeitura = new Replicator.ReadAll(Duration.create(3, TimeUnit.SECONDS));
 
 	private ActorRef persistenceSingleton = getContext().actorOf(
 			ClusterSingletonProxy.props(
@@ -47,19 +41,15 @@ public class EnqueteActor extends AbstractLoggingActor {
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(CadastrarEnquete.class, this::cadastrarEnquete)
-//				.match(Replicator.GetSuccess.class, this::eUmResponseGetEnquetes,
-//                        this::recebeuGetSucesso)
-//                .match(Replicator.UpdateResponse.class, updateResponse -> {
-//                    log().info("Atualizacao de uma acao de update");
-//                    log().info(updateResponse.toString());
-//					bancoDadosReplicator.tell(new Replicator.Get<>(enquetesKey, estrategiaLeitura, Optional.of(sender())), getSelf());
-//                })
+				.match(ListarEnquetes.class, this::listarEnquetes)
                 .match(SingletonPersistentActor.Inserted.class, (msg)->{
                     responderPara.tell(new ArrayList<Enquete>(), getSelf());
                 })
+				.match(SingletonPersistentActor.Enquetes.class, (msg)->{
+					responderPara.tell(msg.getEnquetes(), getSelf());
+				})
 				.build();
 	}
-
 
 	@Override
 	public void preStart() throws Exception {
@@ -73,28 +63,6 @@ public class EnqueteActor extends AbstractLoggingActor {
 		log().debug("Pre Restarting "+ getSelf().path());
 	}
 
-//	private boolean eUmResponseGetEnquetes(Replicator.GetResponse response){
-//        return response.key().equals(enquetesKey)
-//                && (response.getRequest().orElse(null) instanceof ActorRef);
-//    }
-
-    private void recebeuGetSucesso(Replicator.GetSuccess<ORSet<String>> response){
-        log().debug("Valores no banco de dados: {}", response.dataValue().getElements());
-		List<Enquete> retorno = new ArrayList<>();
-
-		ORSet<String> valores = response.dataValue();
-
-		for(String enqueteStr : valores.getElements()){
-			try {
-				retorno.add(new ObjectMapper().readValue(enqueteStr, Enquete.class));
-			} catch (IOException e) {
-				log().error("Erro ao deserializar enquete", e);
-			}
-		}
-
-		responderPara.tell(retorno, getSelf());
-    }
-	
 	private void cadastrarEnquete(CadastrarEnquete envelope) {
 		log().info("Cadastrando Enquete: "+ envelope);
 		responderPara = getSender();
@@ -102,39 +70,30 @@ public class EnqueteActor extends AbstractLoggingActor {
         Enquete enquete = envelope.enquete;
 		enquete.setId(new Date().getTime());
 		persistenceSingleton.tell(new SingletonPersistentActor.Insert(enquete), getSelf());
-		
-//		Enquete enquete = envelope.enquete;
-//		enquete.setId(new Date().getTime());
-//
-//		try {
-//			String enqueteStr = new ObjectMapper().writeValueAsString(enquete);
-//			Replicator.Update<ORSet<String>> update = new Replicator.Update<ORSet<String>>(
-//					enquetesKey,
-//	                ORSet.create(),
-//	                estrategiaEscrita,
-//	                atual -> atual.add(no, enqueteStr)
-//	        );
-//
-//		    bancoDadosReplicator.tell(update, getSelf());
-//		} catch (JsonProcessingException e) {
-//			e.printStackTrace();
-//		}
+	}
+
+	private void listarEnquetes(ListarEnquetes envelope){
+		responderPara = getSender();
+		persistenceSingleton.tell(new SingletonPersistentActor.ShowAll(), getSelf());
 	}
 	
 	public static class CadastrarEnquete implements Serializable{
-		
 		private static final long serialVersionUID = 1L;
 		public final Enquete enquete;
-		
 		public CadastrarEnquete(Enquete enquete){
 			this.enquete = enquete;
 		}
-
 		@Override
 		public String toString() {
 			return "CadastrarEnquete{" +
 					"enquete=" + enquete +
 					'}';
+		}
+	}
+
+	public static class ListarEnquetes implements Serializable{
+		private static final long serialVersionUID = 1L;
+		public ListarEnquetes() {
 		}
 	}
 

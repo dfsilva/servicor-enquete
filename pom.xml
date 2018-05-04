@@ -7,7 +7,7 @@
 	<name>servidor-enquete</name>
 	
 	<properties>
-		<akka.version>2.5.11</akka.version>
+		<akka.version>2.5.12</akka.version>
 	</properties>
 
 	<dependencies>
@@ -69,6 +69,13 @@
 			<groupId>com.typesafe.akka</groupId>
 			<artifactId>akka-http-jackson_2.12</artifactId>
 			<version>10.1.0</version>
+		</dependency>
+
+		<!-- Akka Streams -->
+		<dependency>
+			<groupId>com.typesafe.akka</groupId>
+			<artifactId>akka-stream_2.12</artifactId>
+			<version>${akka.version}</version>
 		</dependency>
 
 

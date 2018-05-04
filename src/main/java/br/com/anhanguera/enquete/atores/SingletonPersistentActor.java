@@ -9,7 +9,9 @@ import br.com.anhanguera.enquete.dominio.Enquete;
 import scala.util.Left;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
@@ -35,6 +37,7 @@ public class SingletonPersistentActor extends AbstractPersistentActor {
     public Receive createReceive() {
         return receiveBuilder()
                 .match(Insert.class, this::inserirEnquete)
+                .match(ShowAll.class, this::listEnquete)
                 .build();
     }
 
@@ -49,6 +52,10 @@ public class SingletonPersistentActor extends AbstractPersistentActor {
             log.info("---------- Enquete inserida, estado atual"+ state);
             getSender().tell(e, getSelf());
         });
+    }
+
+    private void listEnquete(ShowAll msg){
+        getSender().tell(new Enquetes(new ArrayList<>(state.enquetes.values())), getSelf());
     }
 
     @Override
@@ -114,6 +121,19 @@ public class SingletonPersistentActor extends AbstractPersistentActor {
         }
     }
 
+    public static class ShowAll implements Serializable{}
+
+    public static class Enquetes implements Serializable{
+        private List<Enquete> enquetes;
+
+        public Enquetes(List<Enquete> enquetes) {
+            this.enquetes = enquetes;
+        }
+
+        public List<Enquete> getEnquetes() {
+            return enquetes;
+        }
+    }
 
 }
 

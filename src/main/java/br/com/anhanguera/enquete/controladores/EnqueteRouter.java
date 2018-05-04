@@ -32,7 +32,14 @@ public class EnqueteRouter {
 	public static Route routes(ActorSystem system) {
 		return pathPrefix("enquete", () -> route(
 				get(() -> {
-					return complete(StatusCodes.OK, enquetes, Jackson.<List<Enquete>>marshaller());
+					ActorRef enqueteActor = system.actorOf(Props.create(EnqueteActor.class));
+					CompletionStage<List<Enquete>> enqueteComp = ask(enqueteActor, new EnqueteActor.ListarEnquetes(),
+							new Timeout(Duration.create(5, TimeUnit.SECONDS))).thenApply(r -> {
+						System.out.println("resposta");
+						System.out.println(r);
+						return (List<Enquete>)r;
+					});
+					return completeOKWithFuture(enqueteComp, Jackson.marshaller());
 				}),
 
 				put(() -> entity(Jackson.unmarshaller(Enquete.class), enquete -> {				
