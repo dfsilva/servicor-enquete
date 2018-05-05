@@ -70,11 +70,11 @@ public class EnqueteRouter {
 							});
 
 					return complete(StatusCodes.OK, enquete, Jackson.<Enquete>marshaller());
-				}))), path(INTEGER, petId -> route(delete(() -> {
+				}))), path(INTEGER, enqueteId -> route(delete(() -> {
 					Iterator<Enquete> it = enquetes.iterator();
 					while (it.hasNext()) {
 						Enquete eq = it.next();
-						if (eq.getId().equals(petId)) {
+						if (eq.getId().equals(enqueteId)) {
 							enquetes.remove(eq);
 						}
 					}

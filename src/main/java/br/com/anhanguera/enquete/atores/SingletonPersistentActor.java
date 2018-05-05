@@ -100,7 +100,6 @@ public class SingletonPersistentActor extends AbstractPersistentActor {
         }
     }
 
-
     public static class Insert implements Serializable{
         private Enquete enquete;
         public Insert(Enquete enquete) {
@@ -122,6 +121,16 @@ public class SingletonPersistentActor extends AbstractPersistentActor {
     }
 
     public static class ShowAll implements Serializable{}
+
+    public static class RemoveEnquete implements Serializable{
+        private Long enqueteId;
+
+        public RemoveEnquete(Long enqueteId) {
+            this.enqueteId = enqueteId;
+        }
+    }
+    public static class RemoveSuccess implements Serializable{}
+
 
     public static class Enquetes implements Serializable{
         private List<Enquete> enquetes;

@@ -97,4 +97,14 @@ public class EnqueteActor extends AbstractLoggingActor {
 		}
 	}
 
+	public static class ExcluirEnquete implements Serializable{
+		private static final long serialVersionUID = 1L;
+
+		private Long enqueteId;
+
+		public ExcluirEnquete(Long enqueteId) {
+			this.enqueteId = enqueteId;
+		}
+	}
+
 }
